@@ -14,7 +14,8 @@ public class ConversorApp {
                 Menu.menuConversor();
                 String opcion = teclado.nextLine();
                 if(opcion.equals("1")) {
-                    conecxionApi.conectar();
+                    // Pasar el Scanner compartido para evitar múltiples scanners sobre System.in
+                    conecxionApi.conectar(teclado);
                 }else if(opcion.equals("2")) {
                     break;
                 }else if(opcion.equals("3")) {

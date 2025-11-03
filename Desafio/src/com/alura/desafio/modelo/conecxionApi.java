@@ -11,11 +11,9 @@ import java.util.Locale;
 import java.util.Scanner;
 
 public class conecxionApi {
-    public static void conectar() {
+    public static void conectar(Scanner teclado) {
         System.out.println("Conectando a la API...");
         String apiKey = "42ddfeb78f1bfe02e34ca3c9"; //key de la api
-
-        Scanner teclado = new Scanner(System.in);
 
         System.out.println("Ingrese la moneda que desea convertir (ej: USD):");
         String primeraMoneda = teclado.nextLine().trim().toUpperCase(Locale.ROOT); // moneda de origen
@@ -28,6 +26,7 @@ public class conecxionApi {
             monto = Double.parseDouble(montoStr); // convertir el monto a double
         } catch (NumberFormatException e) {
             System.err.println("Monto inválido: " + montoStr);
+            RegistroConversiones.writeLog("ERROR: Monto inválido: " + montoStr + " | Origen: " + primeraMoneda + " | Destino: " + segundaMoneda);
             return;
         }
 
@@ -38,20 +37,13 @@ public class conecxionApi {
                 .uri(URI.create(direccion))
                 .GET()
                 .build();
-        /*
-            * Enviar la solicitud y manejar la respuesta
-            *
-            * Si la respuesta es exitosa (código 200), parsear el JSON
-            * y obtener la tasa de conversión para la moneda destino.
-            * Luego, calcular el monto convertido y mostrar el resultado.
-            * Si hay un error en la solicitud o en la respuesta, mostrar un mensaje de error.
-            *
-         */
+
         try {
             HttpResponse<String> respuesta = cliente.send(solicitud, HttpResponse.BodyHandlers.ofString()); // enviar la solicitud
             if (respuesta.statusCode() != 200) {
                 System.err.println("Error en la petición HTTP. Código: " + respuesta.statusCode());
                 System.err.println("Cuerpo: " + respuesta.body());
+                RegistroConversiones.writeLog("ERROR HTTP: code=" + respuesta.statusCode() + " body=" + respuesta.body());
                 return;
             }
             String body = respuesta.body(); // obtener el cuerpo de la respuesta
@@ -61,13 +53,18 @@ public class conecxionApi {
             if (rate == null) { // si la moneda destino no existe
                 System.err.println("Moneda destino no encontrada en las tasas: " + segundaMoneda);
                 System.err.println("Monedas disponibles: " + apiResponse.conversion_rates().keySet());
+                RegistroConversiones.writeLog("ERROR: Moneda destino no encontrada: " + segundaMoneda + " | Origen: " + primeraMoneda);
                 return;
             }
             double convertido = monto * rate; // calcular el monto convertido
             System.out.printf(Locale.ROOT, "%.2f %s = %.2f %s (tasa: %.6f)\n", monto, primeraMoneda, convertido, segundaMoneda, rate);
+
+            String mensajeLog = String.format(Locale.ROOT, "CONVERSION: %.2f %s -> %.2f %s | tasa: %.6f", monto, primeraMoneda, convertido, segundaMoneda, rate);
+            RegistroConversiones.writeLog(mensajeLog);
         } catch (IOException | InterruptedException e) { // manejar errores de IO o interrupciones
             System.err.println("Error al realizar la petición: " + e.getMessage());
             e.printStackTrace();
+            RegistroConversiones.writeLog("ERROR EXCEPCION: " + e.getClass().getSimpleName() + " - " + e.getMessage());
         }
     }
 }
