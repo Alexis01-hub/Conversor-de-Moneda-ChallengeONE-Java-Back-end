@@ -37,7 +37,7 @@ Desafio/
 - Conexión a Internet para acceder a la API de tipos de cambio.
 - Gson en `Desafio/lib/` (o gestionado por Maven/Gradle).
 
-Nota: la API key está actualmente definida directamente en `conecxionApi.java` en la variable `apiKey`. Se recomienda moverla a una variable de entorno o archivo de configuración para no subir claves en texto plano.
+Nota: la API key está actualmente definida directamente en `conecxionApi.java` en la variable `apiKey`.
 
 ## Nuevas funcionalidades añadidas
 
